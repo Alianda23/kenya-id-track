@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const constituencies = [
@@ -17,6 +17,7 @@ const constituencies = [
 
 const OfficerAuth = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
   const [loginData, setLoginData] = useState({
@@ -62,8 +63,8 @@ const OfficerAuth = () => {
         localStorage.setItem("officerToken", data.token);
         localStorage.setItem("officerData", JSON.stringify(data.officer));
         
-        // TODO: Redirect to officer dashboard
-        console.log("Login successful:", data);
+        // Redirect to officer dashboard
+        navigate("/officer/dashboard");
       } else {
         toast({
           title: "Login Failed",
