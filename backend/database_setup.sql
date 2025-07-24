@@ -21,7 +21,7 @@ CREATE TABLE officers (
 -- Admins table
 CREATE TABLE admins (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -98,9 +98,9 @@ CREATE TABLE status_history (
 );
 
 -- Insert default admin user
-INSERT INTO admins (email, full_name, password_hash) 
-VALUES ('admin@digitalid.gov.ke', 'System Administrator', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfT1bfaXHOGTCK2');
--- Default password is 'admin123' - change this immediately
+INSERT INTO admins (username, full_name, password_hash) 
+VALUES ('admin', 'System Administrator', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfT1bfaXHOGTCK2');
+-- Default username: 'admin', password: 'admin123' - change this immediately
 
 -- Create indexes for better performance
 CREATE INDEX idx_officers_email ON officers(email);

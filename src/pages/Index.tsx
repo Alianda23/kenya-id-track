@@ -28,7 +28,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <Button asChild size="lg" className="w-full">
-                <Link to="/dashboard">Access Admin</Link>
+                <Link to="/admin">Access Admin</Link>
               </Button>
             </CardContent>
           </Card>

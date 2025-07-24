@@ -114,6 +114,56 @@ def officer_login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Admin Authentication
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not username or not password:
+            return jsonify({'error': 'Username and password are required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get admin details
+        cursor.execute("""
+            SELECT id, username, full_name, password_hash 
+            FROM admins WHERE username = %s
+        """, (username,))
+        admin = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not admin:
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        if not check_password_hash(admin['password_hash'], password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        # Generate JWT token
+        token = jwt.encode({
+            'admin_id': admin['id'],
+            'username': admin['username'],
+            'role': 'admin',
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        
+        return jsonify({
+            'token': token,
+            'admin': {
+                'id': admin['id'],
+                'username': admin['username'],
+                'fullName': admin['full_name']
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # Admin Routes
 @app.route('/api/admin/officers/pending', methods=['GET'])
 def get_pending_officers():
