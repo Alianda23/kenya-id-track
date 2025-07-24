@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const constituencies = [
   "Nairobi West", "Nairobi East", "Nairobi North", "Mombasa", "Kisumu", 
@@ -15,6 +16,9 @@ const constituencies = [
 ];
 
 const OfficerAuth = () => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
@@ -39,11 +43,64 @@ const OfficerAuth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
-      alert("Passwords do not match");
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
       return;
     }
-    // TODO: Integrate with Python backend
-    console.log("Signup attempt:", signupData);
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/officer/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: signupData.fullName,
+          idNumber: signupData.idNumber,
+          email: signupData.email,
+          phoneNumber: signupData.phoneNumber,
+          station: signupData.station,
+          password: signupData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Application Submitted",
+          description: "Your application has been submitted for admin approval. You will be notified once approved.",
+        });
+        // Reset form
+        setSignupData({
+          idNumber: "",
+          email: "",
+          phoneNumber: "",
+          fullName: "",
+          station: "",
+          password: "",
+          confirmPassword: ""
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to submit application",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error. Please check if the backend server is running.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -193,8 +250,8 @@ const OfficerAuth = () => {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Submit for Approval
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Submitting..." : "Submit for Approval"}
                     </Button>
                   </form>
                 </TabsContent>
