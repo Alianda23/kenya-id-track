@@ -36,8 +36,50 @@ const OfficerAuth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Integrate with Python backend
-    console.log("Login attempt:", loginData);
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/officer/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back! Redirecting to dashboard...",
+        });
+        
+        // Store the token (you can use localStorage or a state management solution)
+        localStorage.setItem("officerToken", data.token);
+        localStorage.setItem("officerData", JSON.stringify(data.officer));
+        
+        // TODO: Redirect to officer dashboard
+        console.log("Login successful:", data);
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.error || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error. Please check if the backend server is running.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -155,8 +197,8 @@ const OfficerAuth = () => {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Login
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Logging in..." : "Login"}
                     </Button>
                   </form>
                 </TabsContent>
