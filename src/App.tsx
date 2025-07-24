@@ -10,6 +10,7 @@ import OfficerAuth from "./pages/OfficerAuth";
 import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/AdminDashboard";
 import OfficerDashboard from "./pages/OfficerDashboard";
+import TrackApplication from "./pages/TrackApplication";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/admin" element={<AdminAuth />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/officer/dashboard" element={<OfficerDashboard />} />
+          <Route path="/track" element={<TrackApplication />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
