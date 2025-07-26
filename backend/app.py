@@ -225,11 +225,15 @@ def reject_officer(officer_id):
 @app.route('/api/applications', methods=['POST'])
 def submit_application():
     try:
-        # Get form data and files
-        data = request.form.to_dict()
-        
-        # Parse documents JSON
-        documents = json.loads(data.get('documents', '{}'))
+        # Check content type
+        if request.content_type and 'application/json' in request.content_type:
+            # Handle JSON data
+            data = request.get_json()
+            files = {}
+        else:
+            # Handle form data with files
+            data = request.form.to_dict()
+            files = request.files
         
         # Get officer ID from token (you'd normally verify JWT here)
         officer_id = 1  # Temporary - should get from JWT token
@@ -265,13 +269,12 @@ def submit_application():
             data.get('family'), data['homeDistrict'], data['division'],
             data['constituency'], data['location'], data['subLocation'],
             data['villageEstate'], data.get('homeAddress'), data['occupation'],
-            json.dumps(documents), 'submitted'
+            json.dumps(data.get('supportingDocuments', {})), 'submitted'
         ))
         
         application_id = cursor.lastrowid
         
-        # Handle file uploads
-        files = request.files
+        # Handle file uploads (only if files were sent)
         upload_dir = 'uploads'
         os.makedirs(upload_dir, exist_ok=True)
         
