@@ -85,7 +85,12 @@ const OfficerDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Start New Application</Button>
+              <Button 
+                className="w-full" 
+                onClick={() => navigate('/officer/new-application')}
+              >
+                Start New Application
+              </Button>
             </CardContent>
           </Card>
 
