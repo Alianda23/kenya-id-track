@@ -25,11 +25,18 @@ const TrackApplication = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/track/${waitingCardNumber}`);
+      const response = await fetch(`http://localhost:5000/api/applications/track/${waitingCardNumber}`);
       
       if (response.ok) {
         const data = await response.json();
-        setApplicationStatus(data);
+        setApplicationStatus({
+          applicationNumber: data.application.application_number,
+          firstName: data.application.full_names.split(' ')[0],
+          lastName: data.application.full_names.split(' ').slice(1).join(' '),
+          applicationType: 'new',
+          applicationDate: data.application.created_at,
+          status: data.application.status
+        });
       } else if (response.status === 404) {
         toast({
           title: "Not Found",

@@ -34,12 +34,32 @@ CREATE TABLE applications (
     officer_id INT,
     application_type ENUM('new', 'renewal') NOT NULL,
     
-    -- Applicant details
-    applicant_name VARCHAR(100) NOT NULL,
+    -- Personal Information
+    full_names VARCHAR(100) NOT NULL,
     date_of_birth DATE NOT NULL,
-    place_of_birth VARCHAR(100) NOT NULL,
     gender ENUM('male', 'female') NOT NULL,
-    phone_number VARCHAR(20),
+    father_name VARCHAR(100) NOT NULL,
+    mother_name VARCHAR(100) NOT NULL,
+    marital_status ENUM('single', 'married', 'divorced', 'widowed'),
+    husband_name VARCHAR(100) NULL,
+    husband_id_no VARCHAR(20) NULL,
+    
+    -- Location Information  
+    district_of_birth VARCHAR(100) NOT NULL,
+    tribe VARCHAR(100) NOT NULL,
+    clan VARCHAR(100),
+    family VARCHAR(100),
+    home_district VARCHAR(100) NOT NULL,
+    division VARCHAR(100) NOT NULL,
+    constituency VARCHAR(100) NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    sub_location VARCHAR(100) NOT NULL,
+    village_estate VARCHAR(100) NOT NULL,
+    home_address VARCHAR(255),
+    occupation VARCHAR(100) NOT NULL,
+    
+    -- Supporting Documents (JSON field for document info)
+    supporting_documents JSON,
     
     -- For renewals
     existing_id_number VARCHAR(20) NULL,

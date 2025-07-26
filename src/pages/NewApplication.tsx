@@ -115,8 +115,8 @@ const NewApplication = () => {
       if (birthCertificate) submitData.append('birthCertificate', birthCertificate);
       if (parentsId) submitData.append('parentsId', parentsId);
 
-      // TODO: Replace with actual API endpoint
-      const response = await fetch('/api/applications', {
+      // Submit to backend
+      const response = await fetch('http://localhost:5000/api/applications', {
         method: 'POST',
         body: submitData,
       });
