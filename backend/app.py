@@ -225,15 +225,29 @@ def reject_officer(officer_id):
 @app.route('/api/applications', methods=['POST'])
 def submit_application():
     try:
+        print("Received request:", request.method, request.content_type)
+        
         # Check content type
         if request.content_type and 'application/json' in request.content_type:
             # Handle JSON data
             data = request.get_json()
             files = {}
+            print("Processing JSON data:", list(data.keys()) if data else "No data")
         else:
             # Handle form data with files
             data = request.form.to_dict()
             files = request.files
+            print("Processing form data:", list(data.keys()) if data else "No data")
+        
+        # Validate required fields
+        required_fields = ['fullNames', 'dateOfBirth', 'gender', 'fatherName', 'motherName', 
+                          'districtOfBirth', 'tribe', 'homeDistrict', 'division', 
+                          'constituency', 'location', 'subLocation', 'villageEstate', 'occupation']
+        
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            print("Missing required fields:", missing_fields)
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
         
         # Get officer ID from token (you'd normally verify JWT here)
         officer_id = 1  # Temporary - should get from JWT token
@@ -247,6 +261,8 @@ def submit_application():
         count = cursor.fetchone()[0]
         application_number = f"APP{datetime.now().year}{count + 1:06d}"
         
+        print(f"Generated application number: {application_number}")
+        
         # Insert application
         cursor.execute("""
             INSERT INTO applications (
@@ -255,10 +271,10 @@ def submit_application():
                 marital_status, husband_name, husband_id_no,
                 district_of_birth, tribe, clan, family, home_district,
                 division, constituency, location, sub_location, village_estate,
-                home_address, occupation, supporting_documents, status
+                home_address, occupation, supporting_documents, status, created_at
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
         """, (
             application_number, officer_id, 'new',
@@ -269,7 +285,7 @@ def submit_application():
             data.get('family'), data['homeDistrict'], data['division'],
             data['constituency'], data['location'], data['subLocation'],
             data['villageEstate'], data.get('homeAddress'), data['occupation'],
-            json.dumps(data.get('supportingDocuments', {})), 'submitted'
+            json.dumps(data.get('supportingDocuments', {})), 'submitted', datetime.now()
         ))
         
         application_id = cursor.lastrowid
