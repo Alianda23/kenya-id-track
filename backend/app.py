@@ -351,5 +351,129 @@ def track_application(application_number):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/applications', methods=['GET'])
+def get_all_applications():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT a.id, a.application_number, a.full_names, a.status, 
+                   a.application_type, a.created_at, a.updated_at,
+                   o.full_name as officer_name
+            FROM applications a 
+            LEFT JOIN officers o ON a.officer_id = o.id
+            ORDER BY a.created_at DESC
+        """)
+        
+        applications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'applications': applications}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/applications/<int:application_id>', methods=['GET'])
+def get_application_details(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get application details
+        cursor.execute("""
+            SELECT a.*, o.full_name as officer_name
+            FROM applications a 
+            LEFT JOIN officers o ON a.officer_id = o.id
+            WHERE a.id = %s
+        """, (application_id,))
+        
+        application = cursor.fetchone()
+        
+        if not application:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Application not found'}), 404
+        
+        # Get supporting documents
+        cursor.execute("""
+            SELECT document_type, file_path
+            FROM documents WHERE application_id = %s
+        """, (application_id,))
+        
+        documents = cursor.fetchall()
+        application['documents'] = documents
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'application': application}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/applications/<int:application_id>/approve', methods=['PUT'])
+def approve_application(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Generate ID number
+        cursor.execute("SELECT COUNT(*) as count FROM applications WHERE status = 'approved'")
+        count = cursor.fetchone()['count']
+        id_number = f"ID{datetime.now().year}{count + 1:08d}"
+        
+        # Update application status and assign ID number
+        cursor.execute("""
+            UPDATE applications 
+            SET status = 'approved', id_number = %s, updated_at = %s
+            WHERE id = %s
+        """, (id_number, datetime.now(), application_id))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Application not found'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'message': 'Application approved successfully',
+            'id_number': id_number
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/applications/<int:application_id>/reject', methods=['PUT'])
+def reject_application(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Update application status
+        cursor.execute("""
+            UPDATE applications 
+            SET status = 'rejected', updated_at = %s
+            WHERE id = %s
+        """, (datetime.now(), application_id))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Application not found'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'Application rejected successfully'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=5000)
