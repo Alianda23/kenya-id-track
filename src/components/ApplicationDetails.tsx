@@ -38,7 +38,7 @@ interface Application {
   occupation: string;
   application_type: string;
   status: string;
-  id_number?: string;
+  generated_id_number?: string;
   created_at: string;
   officer_name: string;
   documents: Array<{
@@ -356,10 +356,10 @@ const ApplicationDetails = ({ applicationId, open, onClose, onUpdate }: Applicat
                 <label className="text-sm font-medium text-muted-foreground">Application Date</label>
                 <p className="font-medium">{formatDate(application.created_at)}</p>
               </div>
-              {application.id_number && (
+              {application.generated_id_number && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">ID Number</label>
-                  <p className="font-medium text-primary">{application.id_number}</p>
+                  <p className="font-medium text-primary">{application.generated_id_number}</p>
                 </div>
               )}
             </CardContent>

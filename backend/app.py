@@ -427,7 +427,7 @@ def approve_application(application_id):
         # Update application status and assign ID number
         cursor.execute("""
             UPDATE applications 
-            SET status = 'approved', id_number = %s, updated_at = %s
+            SET status = 'approved', generated_id_number = %s, updated_at = %s
             WHERE id = %s
         """, (id_number, datetime.now(), application_id))
         
