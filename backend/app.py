@@ -528,5 +528,92 @@ def dispatch_application(application_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Officer Application Management Routes
+@app.route('/api/officer/applications', methods=['GET'])
+def get_officer_applications():
+    try:
+        # In a real app, get officer_id from JWT token
+        officer_id = request.args.get('officer_id', 1)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, application_number, full_names, status, created_at, 
+                   updated_at, generated_id_number
+            FROM applications 
+            WHERE officer_id = %s 
+            ORDER BY created_at DESC
+        """, (officer_id,))
+        
+        applications = []
+        for row in cursor.fetchall():
+            app = {
+                'id': row[0],
+                'application_number': row[1],
+                'full_names': row[2],
+                'status': row[3],
+                'created_at': row[4].isoformat() if row[4] else None,
+                'updated_at': row[5].isoformat() if row[5] else None,
+                'generated_id_number': row[6]
+            }
+            applications.append(app)
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(applications), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/officer/applications/<int:application_id>/card-arrived', methods=['PUT'])
+def mark_card_arrived(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE applications 
+            SET status = 'card_arrived', updated_at = %s 
+            WHERE id = %s AND status = 'dispatched'
+        """, (datetime.now(), application_id))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Application not found or not in dispatched status'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'Card arrival confirmed'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/officer/applications/<int:application_id>/card-collected', methods=['PUT'])
+def mark_card_collected(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE applications 
+            SET status = 'completed', updated_at = %s 
+            WHERE id = %s AND status = 'card_arrived'
+        """, (datetime.now(), application_id))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Application not found or card not arrived yet'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'Card collection confirmed'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=5000)
