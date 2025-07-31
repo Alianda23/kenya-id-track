@@ -280,7 +280,7 @@ const OfficerDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              {app.status === 'dispatched' && (
+                              {(app.status === 'approved' || app.status === 'dispatched') && (
                                 <Button
                                   size="sm"
                                   variant="outline"
