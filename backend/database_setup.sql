@@ -71,6 +71,10 @@ CREATE TABLE applications (
     -- Generated ID number (after approval)
     generated_id_number VARCHAR(20) UNIQUE NULL,
     
+    -- Card tracking
+    card_arrived BOOLEAN DEFAULT FALSE,
+    collected BOOLEAN DEFAULT FALSE,
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
