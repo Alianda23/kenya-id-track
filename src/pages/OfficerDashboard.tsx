@@ -51,6 +51,7 @@ const OfficerDashboard = () => {
       const response = await fetch('http://localhost:5000/api/officer/applications?officer_id=1');
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched applications:', data); // Debug log
         setApplications(data);
       }
     } catch (error) {
