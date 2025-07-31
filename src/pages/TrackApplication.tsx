@@ -65,8 +65,6 @@ const TrackApplication = () => {
         return <CheckCircle className="h-6 w-6 text-green-500" />;
       case "rejected":
         return <XCircle className="h-6 w-6 text-red-500" />;
-      case "dispatched":
-        return <CheckCircle className="h-6 w-6 text-purple-500" />;
       case "pending":
         return <Clock className="h-6 w-6 text-yellow-500" />;
       default:
@@ -80,8 +78,6 @@ const TrackApplication = () => {
         return "text-green-600 bg-green-50 border-green-200";
       case "rejected":
         return "text-red-600 bg-red-50 border-red-200";
-      case "dispatched":
-        return "text-purple-600 bg-purple-50 border-purple-200";
       case "pending":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
       default:
@@ -216,17 +212,6 @@ const TrackApplication = () => {
                         </p>
                         <p className="text-red-700 text-sm mt-1">
                           Please contact the issuing office for more information.
-                        </p>
-                      </div>
-                    )}
-                    
-                    {applicationStatus.status === "dispatched" && (
-                      <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                        <p className="text-purple-800 font-medium">
-                          📦 Your ID has been dispatched!
-                        </p>
-                        <p className="text-purple-700 text-sm mt-1">
-                          Your ID card has been printed and dispatched. You should receive it soon.
                         </p>
                       </div>
                     )}

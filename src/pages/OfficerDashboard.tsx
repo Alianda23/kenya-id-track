@@ -1,29 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { LogOut, User, FileText, Users, CheckCircle, Package } from "lucide-react";
+import { LogOut, User, FileText, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-interface Application {
-  id: number;
-  application_number: string;
-  full_names: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  generated_id_number: string;
-}
 
 const OfficerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [officerData, setOfficerData] = useState<any>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -36,49 +21,12 @@ const OfficerDashboard = () => {
     }
 
     try {
-      const parsedData = JSON.parse(storedOfficerData);
-      setOfficerData(parsedData);
-      fetchApplications();
+      setOfficerData(JSON.parse(storedOfficerData));
     } catch (error) {
       console.error("Error parsing officer data:", error);
       navigate("/officer");
     }
   }, [navigate]);
-
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      const storedOfficerData = localStorage.getItem("officerData");
-      if (!storedOfficerData) {
-        throw new Error("No officer data found");
-      }
-      
-      const officerInfo = JSON.parse(storedOfficerData);
-      const officerId = officerInfo.id || 1; // Use actual officer ID
-      
-      const response = await fetch(`http://localhost:5000/api/officer/applications?officer_id=${officerId}`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched applications:', data); // Debug log
-        console.log('Applications length:', data.length); // Debug log
-        console.log('First application:', data[0]); // Debug log
-        setApplications(data);
-      } else {
-        const errorData = await response.json();
-        console.error('API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to fetch applications');
-      }
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load applications",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("officerToken");
@@ -88,68 +36,6 @@ const OfficerDashboard = () => {
       description: "You have been successfully logged out.",
     });
     navigate("/officer");
-  };
-
-  const handleCardArrived = async (applicationId: number) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/officer/applications/${applicationId}/card-arrived`, {
-        method: 'PUT'
-      });
-      
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "ID card arrival confirmed"
-        });
-        fetchApplications();
-      } else {
-        throw new Error('Failed to update status');
-      }
-    } catch (error) {
-      toast({
-        title: "Error", 
-        description: "Failed to confirm card arrival",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCardCollected = async (applicationId: number) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/officer/applications/${applicationId}/card-collected`, {
-        method: 'PUT'
-      });
-      
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "ID card collection confirmed"
-        });
-        fetchApplications();
-      } else {
-        throw new Error('Failed to update status');
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to confirm card collection", 
-        variant: "destructive"
-      });
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      'submitted': { label: 'Submitted', variant: 'secondary' as const },
-      'approved': { label: 'Approved', variant: 'default' as const },
-      'rejected': { label: 'Rejected', variant: 'destructive' as const },
-      'dispatched': { label: 'Dispatched', variant: 'outline' as const },
-      'card_arrived': { label: 'Card Arrived', variant: 'secondary' as const },
-      'completed': { label: 'Completed', variant: 'default' as const }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, variant: 'secondary' as const };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   if (!officerData) {
@@ -186,149 +72,58 @@ const OfficerDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="history">Application History</TabsTrigger>
-          </TabsList>
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                New Application
+              </CardTitle>
+              <CardDescription>
+                Process new ID applications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                className="w-full" 
+                onClick={() => navigate('/officer/new-application')}
+              >
+                Start New Application
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Dashboard Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    New Application
-                  </CardTitle>
-                  <CardDescription>
-                    Process new ID applications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    className="w-full" 
-                    onClick={() => navigate('/officer/new-application')}
-                  >
-                    Start New Application
-                  </Button>
-                </CardContent>
-              </Card>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Pending Applications
+              </CardTitle>
+              <CardDescription>
+                View applications in progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">View Pending</Button>
+            </CardContent>
+          </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Pending Applications
-                  </CardTitle>
-                  <CardDescription>
-                    Applications awaiting approval
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    {applications.filter(app => app.status === 'submitted').length}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Total Applications
-                  </CardTitle>
-                  <CardDescription>
-                    All applications processed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    {applications.length}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="history">
-            <Card>
-              <CardHeader>
-                <CardTitle>Application History</CardTitle>
-                <CardDescription>
-                  Manage all applications and track ID card status
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">Loading...</div>
-                ) : applications.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <div>No applications found</div>
-                    <div className="text-xs mt-2">Debug: Officer ID = {officerData?.id}, Applications count = {applications.length}</div>
-                    <div className="text-xs">Applications data: {JSON.stringify(applications)}</div>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Application #</TableHead>
-                        <TableHead>Full Name</TableHead>
-                        <TableHead>ID Number</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {applications.map((app) => (
-                        <TableRow key={app.id}>
-                          <TableCell className="font-medium">
-                            {app.application_number}
-                          </TableCell>
-                          <TableCell>{app.full_names}</TableCell>
-                          <TableCell>
-                            {app.generated_id_number || 'Pending'}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(app.status)}</TableCell>
-                          <TableCell>
-                            {new Date(app.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              {(app.status === 'approved' || app.status === 'dispatched') && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleCardArrived(app.id)}
-                                  className="flex items-center gap-1"
-                                >
-                                  <Package className="h-3 w-3" />
-                                  Card Arrived
-                                </Button>
-                              )}
-                              {app.status === 'card_arrived' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleCardCollected(app.id)}
-                                  className="flex items-center gap-1"
-                                >
-                                  <CheckCircle className="h-3 w-3" />
-                                  Collected
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Application History
+              </CardTitle>
+              <CardDescription>
+                View completed applications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">View History</Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Quick Stats */}
         <div className="mt-8">
