@@ -60,6 +60,8 @@ const OfficerDashboard = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Fetched applications:', data); // Debug log
+        console.log('Applications length:', data.length); // Debug log
+        console.log('First application:', data[0]); // Debug log
         setApplications(data);
       } else {
         const errorData = await response.json();
