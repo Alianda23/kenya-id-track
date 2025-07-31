@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, User, Phone, Mail, Building, FileText, Calendar, Eye } from 'lucide-react';
+import { Check, X, User, Phone, Mail, Building, FileText, Calendar, Eye, Truck } from 'lucide-react';
 import ApplicationDetails from '@/components/ApplicationDetails';
 
 interface PendingOfficer {
@@ -28,11 +28,13 @@ interface Application {
   created_at: string;
   updated_at: string;
   officer_name: string;
+  generated_id_number?: string;
 }
 
 const AdminDashboard = () => {
   const [pendingOfficers, setPendingOfficers] = useState<PendingOfficer[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [approvedApplications, setApprovedApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -41,6 +43,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchPendingOfficers();
     fetchApplications();
+    fetchApprovedApplications();
   }, []);
 
   const fetchPendingOfficers = async () => {
@@ -164,8 +167,66 @@ const AdminDashboard = () => {
     setDetailsOpen(true);
   };
 
+  const fetchApprovedApplications = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/applications/approved');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setApprovedApplications(data.applications);
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to fetch approved applications",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDispatch = async (applicationId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/applications/${applicationId}/dispatch`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "ID dispatched successfully",
+        });
+        // Remove dispatched application from approved list
+        setApprovedApplications(prev => prev.filter(app => app.id !== applicationId));
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to dispatch ID",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleApplicationUpdate = () => {
     fetchApplications();
+    fetchApprovedApplications();
   };
 
   const getStatusColor = (status: string) => {
@@ -176,6 +237,8 @@ const AdminDashboard = () => {
         return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
       case 'rejected':
         return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      case 'dispatched':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
     }
@@ -208,10 +271,14 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold text-primary mb-8">Admin Dashboard</h1>
         
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               ID Applications
+            </TabsTrigger>
+            <TabsTrigger value="dispatch" className="flex items-center gap-2">
+              <Truck className="h-4 w-4" />
+              Dispatch IDs
             </TabsTrigger>
             <TabsTrigger value="officers" className="flex items-center gap-2">
               <User className="h-4 w-4" />
@@ -289,6 +356,84 @@ const AdminDashboard = () => {
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="dispatch">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="h-5 w-5" />
+                  Dispatch Approved IDs
+                </CardTitle>
+                <CardDescription>
+                  Dispatch approved ID cards to applicants
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {approvedApplications.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No approved applications ready for dispatch
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Application Details</TableHead>
+                          <TableHead>Applicant Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Generated ID Number</TableHead>
+                          <TableHead>Approved Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {approvedApplications.map((application) => (
+                          <TableRow key={application.id}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="font-medium">{application.application_number}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  ID: {application.id}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{application.full_names}</div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {application.application_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                                {application.generated_id_number || 'N/A'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {formatDate(application.updated_at)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDispatch(application.id)}
+                                className="bg-purple-600 hover:bg-purple-700"
+                              >
+                                <Truck className="h-4 w-4 mr-1" />
+                                Dispatch
                               </Button>
                             </TableCell>
                           </TableRow>

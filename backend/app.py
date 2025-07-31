@@ -475,5 +475,58 @@ def reject_application(application_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/applications/approved', methods=['GET'])
+def get_approved_applications():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        query = """
+            SELECT a.id, a.application_number, a.full_names, a.application_type, 
+                   a.generated_id_number, a.created_at, a.updated_at, o.full_name as officer_name
+            FROM applications a
+            LEFT JOIN officers o ON a.officer_id = o.id
+            WHERE a.status = 'approved'
+            ORDER BY a.updated_at DESC
+        """
+        
+        cursor.execute(query)
+        applications = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'applications': applications}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/applications/<int:application_id>/dispatch', methods=['PUT'])
+def dispatch_application(application_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Update application status to dispatched
+        cursor.execute("""
+            UPDATE applications 
+            SET status = 'dispatched', updated_at = %s
+            WHERE id = %s AND status = 'approved'
+        """, (datetime.now(), application_id))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Application not found or not approved'}), 404
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'Application dispatched successfully'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=5000)
