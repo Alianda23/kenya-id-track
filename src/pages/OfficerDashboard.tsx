@@ -265,7 +265,9 @@ const OfficerDashboard = () => {
                   <div className="text-center py-8">Loading...</div>
                 ) : applications.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No applications found
+                    <div>No applications found</div>
+                    <div className="text-xs mt-2">Debug: Officer ID = {officerData?.id}, Applications count = {applications.length}</div>
+                    <div className="text-xs">Applications data: {JSON.stringify(applications)}</div>
                   </div>
                 ) : (
                   <Table>
