@@ -576,7 +576,7 @@ def mark_card_arrived(application_id):
         cursor.execute("""
             UPDATE applications 
             SET status = 'card_arrived', updated_at = %s 
-            WHERE id = %s AND status = 'dispatched'
+            WHERE id = %s AND (status = 'dispatched' OR status = 'approved')
         """, (datetime.now(), application_id))
         
         if cursor.rowcount == 0:

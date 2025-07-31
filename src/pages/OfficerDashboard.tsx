@@ -48,11 +48,23 @@ const OfficerDashboard = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/officer/applications?officer_id=1');
+      const storedOfficerData = localStorage.getItem("officerData");
+      if (!storedOfficerData) {
+        throw new Error("No officer data found");
+      }
+      
+      const officerInfo = JSON.parse(storedOfficerData);
+      const officerId = officerInfo.id || 1; // Use actual officer ID
+      
+      const response = await fetch(`http://localhost:5000/api/officer/applications?officer_id=${officerId}`);
       if (response.ok) {
         const data = await response.json();
         console.log('Fetched applications:', data); // Debug log
         setApplications(data);
+      } else {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch applications');
       }
     } catch (error) {
       console.error('Error fetching applications:', error);
