@@ -617,5 +617,39 @@ def update_collected(application_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Admin renewal applications route
+@app.route('/api/admin/applications/renewals', methods=['GET'])
+def get_renewal_applications():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT a.id, a.application_number, a.full_names, a.status, a.application_type,
+                   a.created_at, a.updated_at, a.generated_id_number,
+                   o.full_name as officer_name
+            FROM applications a
+            LEFT JOIN officers o ON a.officer_id = o.id
+            WHERE a.application_type = 'renewal'
+            ORDER BY a.created_at DESC
+        """)
+        
+        applications = cursor.fetchall()
+        
+        # Convert datetime objects to strings
+        for app in applications:
+            if app['created_at']:
+                app['created_at'] = app['created_at'].isoformat()
+            if app['updated_at']:
+                app['updated_at'] = app['updated_at'].isoformat()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'applications': applications}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='localhost', port=5000)

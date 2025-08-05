@@ -34,6 +34,7 @@ interface Application {
 const AdminDashboard = () => {
   const [pendingOfficers, setPendingOfficers] = useState<PendingOfficer[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [renewalApplications, setRenewalApplications] = useState<Application[]>([]);
   const [approvedApplications, setApprovedApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchPendingOfficers();
     fetchApplications();
+    fetchRenewalApplications();
     fetchApprovedApplications();
   }, []);
 
@@ -91,6 +93,29 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRenewalApplications = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/applications/renewals');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setRenewalApplications(data.applications);
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to fetch renewal applications",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
     }
   };
 
@@ -226,6 +251,7 @@ const AdminDashboard = () => {
 
   const handleApplicationUpdate = () => {
     fetchApplications();
+    fetchRenewalApplications();
     fetchApprovedApplications();
   };
 
@@ -271,10 +297,14 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold text-primary mb-8">Admin Dashboard</h1>
         
         <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               ID Applications
+            </TabsTrigger>
+            <TabsTrigger value="renewals" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              ID Renewals
             </TabsTrigger>
             <TabsTrigger value="dispatch" className="flex items-center gap-2">
               <Truck className="h-4 w-4" />
@@ -318,6 +348,88 @@ const AdminDashboard = () => {
                       </TableHeader>
                       <TableBody>
                         {applications.map((application) => (
+                          <TableRow key={application.id}>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="font-medium">{application.application_number}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  ID: {application.id}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{application.full_names}</div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {application.application_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{application.officer_name}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {formatDate(application.created_at)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(application.status)}>
+                                {application.status.toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleViewDetails(application.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="renewals">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  ID Renewal Applications
+                </CardTitle>
+                <CardDescription>
+                  Review and manage citizen ID renewal applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renewalApplications.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No ID renewal applications found
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Application Details</TableHead>
+                          <TableHead>Applicant Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Processing Officer</TableHead>
+                          <TableHead>Application Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {renewalApplications.map((application) => (
                           <TableRow key={application.id}>
                             <TableCell>
                               <div className="space-y-1">
