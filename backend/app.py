@@ -363,6 +363,7 @@ def get_all_applications():
                    o.full_name as officer_name
             FROM applications a 
             LEFT JOIN officers o ON a.officer_id = o.id
+            WHERE a.application_type != 'renewal'
             ORDER BY a.created_at DESC
         """)
         
@@ -542,7 +543,7 @@ def get_officer_applications():
         cursor.execute("""
             SELECT id, application_number, full_names as fullName, date_of_birth as dateOfBirth,
                    status, created_at as applicationDate, generated_id_number as idNumber,
-                   card_arrived, collected, father_name as phoneNumber
+                   card_arrived, collected, father_name as phoneNumber, application_type
             FROM applications 
             WHERE officer_id = %s
             ORDER BY created_at DESC

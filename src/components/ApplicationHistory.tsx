@@ -15,6 +15,7 @@ interface Application {
   idNumber?: string;
   cardArrived: boolean;
   collected: boolean;
+  application_type: string;
 }
 
 interface ApplicationHistoryProps {
@@ -157,13 +158,21 @@ const ApplicationHistory = ({ officerId }: ApplicationHistoryProps) => {
                 <p className="text-sm text-muted-foreground">
                   Applied: {new Date(application.applicationDate).toLocaleDateString()}
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  Type: <span className="capitalize font-medium">{application.application_type}</span>
+                </p>
                 {application.idNumber && (
                   <p className="text-sm font-medium text-primary">
                     ID Number: {application.idNumber}
                   </p>
                 )}
               </div>
-              {getStatusBadge(application.status)}
+              <div className="flex flex-col gap-2">
+                {getStatusBadge(application.status)}
+                <Badge variant="outline" className="capitalize">
+                  {application.application_type}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
